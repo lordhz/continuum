@@ -218,11 +218,28 @@ public class PostFilter implements Parcelable {
             }
         }
         if (postFilter.excludeSubreddits != null && !postFilter.excludeSubreddits.equals("")) {
-            String[] subreddits = postFilter.excludeSubreddits.split(",", 0);
-            for (String s : subreddits) {
-                if (!s.trim().equals("") && post.getSubredditName().equalsIgnoreCase(s.trim())) {
-                    return false;
-                }
+            String[] subfilters = postFilter.excludeSubreddits.split("#", 0);
+            String subpattern = "";
+            String sublist = "";
+            if (subfilters.length > 1) {
+                subpattern = subfilters[0];
+                sublist = subfilters[1].toLowerCase();
+            } else if (postFilter.excludeSubreddits.endsWith("#")) {
+                subpattern = subfilters[0];
+            } else {
+                sublist = subfilters[0].toLowerCase();
+            }
+            if (!sublist.trim().equals("") && sublist.indexOf(post.getSubredditName().toLowerCase()) != -1) {
+                return false;
+            }
+            if (!subpattern.trim().equals("")) {
+                try {
+                    Pattern pattern = Pattern.compile(subpattern);
+                    Matcher matcher = pattern.matcher(post.getSubredditName());
+                    if (matcher.find()) {
+                        return false;
+                    }
+                } catch (PatternSyntaxException ignore) {}
             }
         }
         if (postFilter.containSubreddits != null && !postFilter.containSubreddits.equals("")) {
