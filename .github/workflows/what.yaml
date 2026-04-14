@@ -1,0 +1,26 @@
+name: what
+
+on:
+  workflow_dispatch:
+#  push:
+#    branches:
+#      - main
+#      - master
+#      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Debug Secrets
+        run: |
+          echo "KEYSTORE_BASE64 is: ${#KEYSTORE_BASE64}"
+          echo "SIGNING_STORE_PASSWORD is: ${#SIGNING_STORE_PASSWORD}"
+          echo "SIGNING_KEY_ALIAS is: ${#SIGNING_KEY_ALIAS}"
+          echo "SIGNING_KEY_PASSWORD is: ${#SIGNING_KEY_PASSWORD}"
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
