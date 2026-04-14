@@ -24,7 +24,7 @@ jobs:
       - name: Create keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 -d > app/infinity.keystore
+        run: echo "$KEYSTORE_BASE64" | base64 -d > infinity.keystore
 
       - name: Create keystore.properties
         env:
@@ -33,7 +33,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
           cat > keystore.properties << EOF
-          storeFile=app/infinity.keystore
+          storeFile=./infinity.keystore
           storePassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
           keyPassword=$KEY_PASSWORD
