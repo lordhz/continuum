@@ -24,3 +24,27 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          
+      - name: Decode keystore from Base64
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Error: KEYSTORE_BASE64 secret not set"
+            exit 1
+          fi
+          
+          # Debug: show length (but not the actual value for security)
+          echo "Secret length: ${#KEYSTORE_BASE64}"
+          
+          # Decode and save
+          echo "$KEYSTORE_BASE64" | base64 -d > ./infinity.keystore
+          
+          # Verify the keystore was created
+          if [ -f ./infinity.keystore ]; then
+            ls -lh ./infinity.keystore
+            echo "Keystore decoded successfully"
+          else
+            echo "Error: Failed to create keystore file"
+            exit 1
+          fi
