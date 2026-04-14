@@ -2,6 +2,14 @@
 
 ---
 
+8.1.4.5 / 2026-4-9
+===========
+Note v8a is the 64-bit build, and should be considered the default choose.
+
+* Fixed issue with the Reddit account's interface language being anything
+other than English at WebView login. Thanks to @wchill
+* Fixed Jump to Next Top-level Comment #244
+
 8.1.4.4 / 2026-4-3
 ===========
 Note v8a is the 64-bit build, and should be considered the default choose.
