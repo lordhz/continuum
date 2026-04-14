@@ -2,11 +2,16 @@ name: Build
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+      - develop
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -21,10 +26,15 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Create keystore
+      - name: Decode keystore from Base64
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 -d > infinity.keystore
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Warning: KEYSTORE_BASE64 secret not set. Building without signing."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > ./infinity.keystore
 
       - name: Create keystore.properties
         env:
@@ -32,6 +42,10 @@ jobs:
           KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
+          if [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "Warning: Signing secrets not fully configured. Skipping keystore.properties."
+            exit 0
+          fi
           cat > keystore.properties << EOF
           storeFile=./infinity.keystore
           storePassword=$KEYSTORE_PASSWORD
@@ -39,12 +53,36 @@ jobs:
           keyPassword=$KEY_PASSWORD
           EOF
 
-      - name: Build release APK
-        run: ./gradlew assembleRelease
+      - name: Build Debug APK (test)
+        run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload APK
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Upload Debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Continuum-${{ github.sha }}
+          name: continuum-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Upload Release APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: continuum-release-${{ github.sha }}
           path: app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
+          if-no-files-found: warn
+
+      - name: Run Unit Tests
+        if: always()
+        run: ./gradlew test --stacktrace
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: app/build/test-results/
+          if-no-files-found: warn
