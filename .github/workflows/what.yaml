@@ -13,18 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Debug Secrets
-        run: |
-          echo "KEYSTORE_BASE64 is: ${#KEYSTORE_BASE64}"
-          echo "SIGNING_STORE_PASSWORD is: ${#SIGNING_STORE_PASSWORD}"
-          echo "SIGNING_KEY_ALIAS is: ${#SIGNING_KEY_ALIAS}"
-          echo "SIGNING_KEY_PASSWORD is: ${#SIGNING_KEY_PASSWORD}"
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-          
       - name: Decode keystore from Base64
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -34,17 +22,33 @@ jobs:
             exit 1
           fi
           
-          # Debug: show length (but not the actual value for security)
-          echo "Secret length: ${#KEYSTORE_BASE64}"
+          echo "Current working directory: $(pwd)"
           
-          # Decode and save
+          # Decode and save in the same location as keystore.properties
           echo "$KEYSTORE_BASE64" | base64 -d > ./infinity.keystore
           
-          # Verify the keystore was created
           if [ -f ./infinity.keystore ]; then
+            echo "✓ Keystore created at: $(pwd)/infinity.keystore"
             ls -lh ./infinity.keystore
-            echo "Keystore decoded successfully"
           else
-            echo "Error: Failed to create keystore file"
+            echo "✗ Failed to create keystore"
             exit 1
           fi
+
+      - name: Create keystore properties
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "Current working directory: $(pwd)"
+          
+          cat > keystore.properties << EOF
+          storeFile=./infinity.keystore
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          
+          echo "✓ keystore.properties created"
+          cat keystore.properties
