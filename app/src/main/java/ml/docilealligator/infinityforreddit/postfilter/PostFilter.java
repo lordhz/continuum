@@ -235,7 +235,7 @@ public class PostFilter implements Parcelable {
             if (!subpattern.trim().equals("")) {
                 try {
                     Pattern pattern = Pattern.compile(subpattern);
-                    Matcher matcher = pattern.matcher(post.getSubredditName());
+                    Matcher matcher = pattern.matcher(post.getSubredditName().toLowerCase());
                     if (matcher.find()) {
                         return false;
                     }
