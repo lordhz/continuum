@@ -1,5 +1,10 @@
 <h1 align="center">Continuum</h1>
 
+
+<p>this fork implement (roughly) the use of a regex in the subreddit filter.
+Regex must appear at the beginning of the list and be followed by the character ‘#’ ie "(?i).*(one|two).*#"</p>
+
+
 <p align="center">
   <picture>
     <source

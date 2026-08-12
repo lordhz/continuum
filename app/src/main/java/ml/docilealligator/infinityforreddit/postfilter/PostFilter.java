@@ -293,34 +293,28 @@ public class PostFilter implements Parcelable {
             }
         }
         if (postFilter.excludeSubreddits != null && !postFilter.excludeSubreddits.equals("")) {
-            String[] subreddits = postFilter.excludeSubreddits.split(",", 0);
-            String subredditName = post.getSubredditName();
-            for (String s : subreddits) {
-                String filter = s.trim();
-                if (filter.isEmpty()) {
-                    continue;
-                }
-                boolean matched = false;
-                boolean fuzzyMatch = false;
-                if (subredditFilterPrefixMatching && filter.length() >= SUBREDDIT_FILTER_PREFIX_MIN_LENGTH) {
-                    matched = subredditName.regionMatches(true, 0, filter, 0, filter.length());
-                    fuzzyMatch = matched;
-                }
-                if (!matched && subredditFilterSuffixMatching && filter.length() >= SUBREDDIT_FILTER_SUFFIX_MIN_LENGTH) {
-                    matched = subredditName.regionMatches(true, subredditName.length() - filter.length(), filter, 0, filter.length());
-                    fuzzyMatch = matched;
-                }
-                // Never let prefix/suffix matching hide a subreddit the user is subscribed to;
-                // an exact-name entry below is still honoured as a deliberate block.
-                if (fuzzyMatch && neverHideSubredditsLowerCase.contains(subredditName.toLowerCase(Locale.ENGLISH))) {
-                    matched = false;
-                }
-                if (!matched) {
-                    matched = subredditName.equalsIgnoreCase(filter);
-                }
-                if (matched) {
-                    return false;
-                }
+            String[] subfilters = postFilter.excludeSubreddits.split("#", 0);
+            String subpattern = "";
+            String sublist = "";
+            if (subfilters.length > 1) {
+                subpattern = subfilters[0];
+                sublist = subfilters[1].toLowerCase();
+            } else if (postFilter.excludeSubreddits.endsWith("#")) {
+                subpattern = subfilters[0];
+            } else {
+                sublist = subfilters[0].toLowerCase();
+            }
+            if (!sublist.trim().equals("") && sublist.indexOf(post.getSubredditName().toLowerCase()) != -1) {
+                return false;
+            }
+            if (!subpattern.trim().equals("")) {
+                try {
+                    Pattern pattern = Pattern.compile(subpattern);
+                    Matcher matcher = pattern.matcher(post.getSubredditName().toLowerCase());
+                    if (matcher.find()) {
+                        return false;
+                    }
+                } catch (PatternSyntaxException ignore) {}
             }
         }
         if (postFilter.containSubreddits != null && !postFilter.containSubreddits.equals("")) {
